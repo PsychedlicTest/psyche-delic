@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Psyche-delic — Admin review</title>
+<style>
+  body{font-family:ui-monospace,Menlo,Consolas,monospace; background:#0e1a1c; color:#e8f0ef; margin:0; padding:24px;}
+  h1{font-size:18px; margin:0 0 4px;}
+  .sub{color:#8fb0ae; font-size:13px; margin-bottom:20px;}
+  .keybar{display:flex; gap:8px; margin-bottom:20px;}
+  input, select{background:#132527; border:1px solid #2a4448; color:#e8f0ef; padding:8px 10px; font-family:inherit; font-size:13px;}
+  button{background:#06849b; color:#fff; border:none; padding:8px 14px; cursor:pointer; font-family:inherit; font-size:13px;}
+  button:hover{background:#08a0bb;}
+  table{width:100%; border-collapse:collapse; font-size:13px;}
+  th, td{text-align:left; padding:9px 10px; border-bottom:1px solid #1f3436; vertical-align:top;}
+  th{color:#8fb0ae; font-weight:600; position:sticky; top:0; background:#0e1a1c;}
+  tr:hover{background:#122325;}
+  pre{white-space:pre-wrap; word-break:break-word; margin:0; max-width:520px; max-height:220px; overflow:auto; background:#132527; padding:8px; border-radius:3px;}
+  .err{color:#e08a9b; margin-top:14px;}
+  .pill{display:inline-block; background:#1f3436; padding:2px 8px; border-radius:10px; font-size:11px; color:#8fb0ae;}
+</style>
+</head>
+<body>
+  <h1>Psyche-delic — response review</h1>
+  <div class="sub">Manual review only. Nothing here is auto-interpreted — read each entry and add your own reading.</div>
+  <div class="keybar">
+    <input id="adminKey" type="password" placeholder="Admin key" style="width:220px;">
+    <select id="tileFilter"><option value="">All exercises</option></select>
+    <button id="loadBtn">Load</button>
+  </div>
+  <div class="err" id="err"></div>
+  <table>
+    <thead><tr><th>Submitted</th><th>User</th><th>Exercise</th><th>Payload</th></tr></thead>
+    <tbody id="rows"></tbody>
+  </table>
+
+<script>
+const API_BASE = window.location.origin;
+async function load(){
+  const key = document.getElementById('adminKey').value;
+  const tileId = document.getElementById('tileFilter').value;
+  const err = document.getElementById('err'); err.textContent='';
+  try{
+    const res = await fetch(API_BASE+'/api/admin/responses'+(tileId?('?tileId='+encodeURIComponent(tileId)):''), {
+      headers: { 'X-Admin-Key': key }
+    });
+    const data = await res.json();
+    if(!res.ok) throw new Error(data.error || 'Request failed');
+    const rows = document.getElementById('rows');
+    rows.innerHTML='';
+    const tileSet = new Set();
+    data.responses.forEach(r=>{
+      tileSet.add(r.tileId+'::'+r.tileTitle);
+      const tr = document.createElement('tr');
+      tr.innerHTML =
+        '<td>'+new Date(r.submittedAt).toLocaleString()+'</td>'+
+        '<td>'+(r.user ? (r.user.name+'<br><span class="pill">'+r.user.email+'</span>') : '(deleted user)')+'</td>'+
+        '<td>'+r.tileTitle+'</td>'+
+        '<td><pre>'+JSON.stringify(r.payload, null, 2).replace(/</g,'&lt;')+'</pre></td>';
+      rows.appendChild(tr);
+    });
+    const filterSel = document.getElementById('tileFilter');
+    const existing = new Set([...filterSel.options].map(o=>o.value));
+    tileSet.forEach(t=>{
+      const [id,title]=t.split('::');
+      if(!existing.has(id)){
+        const opt=document.createElement('option'); opt.value=id; opt.textContent=title;
+        filterSel.appendChild(opt);
+      }
+    });
+  }catch(e){ err.textContent = e.message; }
+}
+document.getElementById('loadBtn').addEventListener('click', load);
+</script>
+</body>
+</html>

@@ -1,0 +1,13 @@
+{
+  "name": "psyche-delic",
+  "version": "1.0.0",
+  "description": "Psyche-delic companion server — serves the site and emails recorded readings via email-config.json",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "nodemailer": "^6.9.13"
+  }
+}

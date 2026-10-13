@@ -1,0 +1,11 @@
+# Dependencies
+node_modules/
+
+# Secrets — never commit these
+.env
+
+# Local runtime data
+data.json
+
+# macOS
+.DS_Store
